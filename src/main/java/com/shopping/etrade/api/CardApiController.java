@@ -1,0 +1,91 @@
+package com.shopping.etrade.api;
+
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.shopping.etrade.dto.CardDTO;
+import com.shopping.etrade.dto.CardProductDTO;
+import com.shopping.etrade.dto.ProductDTO;
+import com.shopping.etrade.exception.IncompatibleCurrencyException;
+import com.shopping.etrade.exception.ObjectNotFoundException;
+import com.shopping.etrade.exception.SpendingIsNotEnoughException;
+import com.shopping.etrade.request.RequestAddProductToCard;
+import com.shopping.etrade.response.ResponseAddProductToCard;
+import com.shopping.etrade.service.CampaignDiscountQueryService;
+import com.shopping.etrade.service.CardCommandService;
+import com.shopping.etrade.service.CardQueryService;
+
+@RestController
+@RequestMapping(value = "/shopping", produces = "application/json;charset=UTF-8", consumes = MediaType.APPLICATION_JSON_VALUE)
+public class CardApiController {
+
+	private final CardCommandService cardCommandService;
+	private final CardQueryService cardQueryService;
+	private final CampaignDiscountQueryService campaignDiscountQueryService;
+
+	@Autowired
+	public CardApiController(CardCommandService cardCommandService,
+			CampaignDiscountQueryService campaignDiscountQueryService, CardQueryService cardQueryService) {
+		this.cardCommandService = cardCommandService;
+		this.campaignDiscountQueryService = campaignDiscountQueryService;
+		this.cardQueryService = cardQueryService;
+	}
+
+	@PostMapping(value = "/add/product/to/card", consumes = { MediaType.APPLICATION_JSON_UTF8_VALUE })
+	public ResponseAddProductToCard addProductToCard(@RequestBody @Valid RequestAddProductToCard request)
+			throws IncompatibleCurrencyException, ObjectNotFoundException {
+		ResponseAddProductToCard response = new ResponseAddProductToCard();
+		response.setCardProductDTO(cardCommandService.addProductToCard(request.getCardProductDTO()));
+		return response;
+	}
+
+	@PutMapping(value = "remove/product/from/card", consumes = { MediaType.ALL_VALUE })
+	@ResponseStatus(HttpStatus.OK)
+	public void removeProductFromCard(@RequestParam("CARD_PRODUCT_ID") Long cardProductId) throws ObjectNotFoundException {
+		cardCommandService.removeProductFromCard(cardProductId);
+	}
+
+	@PutMapping(value = "add/coupon/to/card/{COUPON_CODE}", consumes = { MediaType.ALL_VALUE })
+	@ResponseStatus(HttpStatus.OK)
+	public void addCouponToCard(@PathVariable("COUPON_CODE") String code, @RequestParam("CARD_ID") Long cardId)
+			throws IncompatibleCurrencyException, ObjectNotFoundException, SpendingIsNotEnoughException {
+		cardCommandService.addCouponToCard(cardId, code);
+	}
+
+	@PutMapping(value = "calculate/card/payment/amount", consumes = { MediaType.ALL_VALUE })
+	@ResponseStatus(HttpStatus.OK)
+	public void calculateCardPaymentAmount(@RequestParam("CARD_ID") Long cardId) throws IncompatibleCurrencyException, ObjectNotFoundException {
+		campaignDiscountQueryService.calculateDiscountedAmountOfCard(cardId);
+	}
+
+	@PutMapping(value = "test", consumes = { MediaType.ALL_VALUE })
+	@ResponseStatus(HttpStatus.OK)
+	public void testApplication() throws IncompatibleCurrencyException, ObjectNotFoundException, SpendingIsNotEnoughException {
+		CardProductDTO cardProductDTO = CardProductDTO.createMock(null, ProductDTO.createMock(1L), 2);
+		cardProductDTO = cardCommandService.addProductToCard(cardProductDTO);
+		cardProductDTO = CardProductDTO.createMock(CardDTO.createMock(cardProductDTO.getCardDTO().getId()),
+				ProductDTO.createMock(2L), 3);
+		cardProductDTO = cardCommandService.addProductToCard(cardProductDTO);
+		cardProductDTO = CardProductDTO.createMock(CardDTO.createMock(cardProductDTO.getCardDTO().getId()),
+				ProductDTO.createMock(3L), 6);
+		cardProductDTO = cardCommandService.addProductToCard(cardProductDTO);
+		cardProductDTO = CardProductDTO.createMock(CardDTO.createMock(cardProductDTO.getCardDTO().getId()),
+				ProductDTO.createMock(4L), 1);
+		cardProductDTO = cardCommandService.addProductToCard(cardProductDTO);
+		cardCommandService.addCouponToCard(cardProductDTO.getCardDTO().getId(), "DEF1234");
+		cardCommandService.addCouponToCard(cardProductDTO.getCardDTO().getId(), "ABC32434");
+		cardQueryService.printCardAmount(cardProductDTO.getCardDTO().getId());
+	}
+
+}
