@@ -15,7 +15,7 @@ Bu uygulama SpringBoot web service olarak geliştirilmiş olup, aşağıdaki tek
 
 Uygulamanın data modeli şu şekildedir:
 
- ![alt text](https://github.com/ufukdogdu/shoppingcard/tree/master/src/main/images/DataModel.jpg)
+ ![alt text](src/main/images/DataModel.jpg)
 
 CARD: Sepetin ücret bilgilerinin tutulduğu ana tablodur.
 
