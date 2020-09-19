@@ -12,7 +12,7 @@ public class ProductMocker {
 		product.setFirmName("Firm Name");
 		product.setId(1L);
 		product.setPrice(MoneyMocker.generateMoney());
-		product.setQuantity(QuantityType.COUNT);
+		product.setQuantityType(QuantityType.COUNT);
 		product.setTitle("Product");
 		product.setVersion(0);
 		return product;
@@ -24,7 +24,7 @@ public class ProductMocker {
 		productDTO.setFirmName("Firm Name");
 		productDTO.setId(1L);
 		productDTO.setPrice(MoneyMocker.generateMoneyDTO());
-		productDTO.setQuantity(QuantityType.COUNT);
+		productDTO.setQuantityType(QuantityType.COUNT);
 		productDTO.setTitle("Product");
 		productDTO.setVersion(0);
 		return productDTO;

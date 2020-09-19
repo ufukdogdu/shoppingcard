@@ -3,10 +3,13 @@ package com.shopping.etrade.service;
 import java.util.HashMap;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.shopping.etrade.dto.CardCouponDTO;
 import com.shopping.etrade.dto.CardDTO;
 import com.shopping.etrade.dto.CardProductDTO;
 import com.shopping.etrade.dto.base.MoneyDTO;
@@ -39,7 +42,7 @@ public class CardCommandService {
 	public final CampaignDiscountQueryService campaignDiscountQueryService;
 	public final CardQueryService cardQueryService;
 	public final DeliveryStrategyContext deliveryStrategyContext;
-
+	Logger logger = LoggerFactory.getLogger(CardCommandService.class);
 	@Autowired
 	public CardCommandService(CardRepository cardRepository, CardProductRepository cardProductRepository,
 			ProductRepository productRepository, CouponRepository couponRepository,
@@ -65,13 +68,15 @@ public class CardCommandService {
 		CardProduct cardProduct = cardProductRepository.findByCardAndProduct(card, product);
 		cardProduct = addQuantityOrBuyNewProduct(cardProductDTO, card, product, cardProduct);
 		cardProduct = cardProductRepository.save(cardProduct);
-		System.out.println(cardProduct.getQuantity() + " adet " + product.getTitle() + " ürünü sepete ekleniyor....");
-		this.calculateAndSaveCardAmounts(card, cardProduct, product);
+		logger.info(cardProduct.getQuantity() + " adet " + product.getTitle() + " ürünü sepete ekleniyor....");
+		Money.toMoneyDTO(product.getPrice()).multiply(cardProduct.getQuantity()).printAmount("Eklenen Ürünlerin Toplam Tutarı:");
+		this.calculateAndSaveCardAmounts(card.getId());
 		return CardProduct.toDTO(cardProduct);
 	}
 
-	private void calculateAndSaveCardAmounts(Card card, CardProduct cardProduct, Product product)
+	public CardDTO calculateAndSaveCardAmounts(Long cardId)
 			throws IncompatibleCurrencyException, ObjectNotFoundException {
+		Card card = cardRepository.findById(cardId).orElseThrow(() -> new ObjectNotFoundException());
 		MoneyDTO totalCardAmount = cardQueryService.getCardTotalAmountWithoutDiscount(card.getId());
 		MoneyDTO totalCampaignDiscountedCardAmount = campaignDiscountQueryService
 				.calculateDiscountedAmountOfCard(card.getId());
@@ -81,7 +86,9 @@ public class CardCommandService {
 		card.setBasketAmount(Money.fromMoneyDTO(totalCardAmount));
 		card.setShippingAmount(Money.fromMoneyDTO(deliveryAmount));
 		card = cardRepository.save(card);
+		return Card.toDTO(card);
 	}
+	
 
 	private CardProduct addQuantityOrBuyNewProduct(CardProductDTO cardProductDTO, Card card, Product product,
 			CardProduct cardProduct) {
@@ -107,14 +114,22 @@ public class CardCommandService {
 		return card;
 	}
 
-	public void removeProductFromCard(Long cardProductId) throws ObjectNotFoundException {
+	public void removeProductFromCard(Long cardProductId, int quantity) throws ObjectNotFoundException, IncompatibleCurrencyException {
 		CardProduct cardProduct = cardProductRepository.findById(cardProductId)
 				.orElseThrow(() -> new ObjectNotFoundException());
-		cardProductRepository.delete(cardProduct);
-
+		if (quantity >= cardProduct.getQuantity()) {
+			cardProductRepository.delete(cardProduct);
+		} else if(quantity < cardProduct.getQuantity()){
+			int oldQuantity = cardProduct.getQuantity();
+			cardProduct.setQuantity(oldQuantity-quantity);
+			cardProductRepository.save(cardProduct);
+		}
+		logger.info(quantity + " adet " + cardProduct.getProduct().getTitle() + " ürünü sepetten çıkarılıyor....");
+		Money.toMoneyDTO(cardProduct.getProduct().getPrice()).multiply(cardProduct.getQuantity()).printAmount("Çıkarılan Ürünlerin Toplam Tutarı:");
+		this.calculateAndSaveCardAmounts(cardProduct.getCard().getId());
 	}
 
-	public void addCouponToCard(Long cardId, String couponCode)
+	public CardCouponDTO addCouponToCard(Long cardId, String couponCode)
 			throws IncompatibleCurrencyException, ObjectNotFoundException, SpendingIsNotEnoughException {
 		Coupon coupon = couponRepository.findByCodeAndCouponStatus(couponCode, CouponStatus.ACTIVE);
 		if (coupon == null) {
@@ -124,29 +139,38 @@ public class CardCommandService {
 		Card card = cardRepository.findById(cardId).orElseThrow(() -> new ObjectNotFoundException());
 		MoneyDTO cardTotalAmount = cardQueryService.getCardTotalAmountWithoutDiscount(cardId);
 		if (Money.toMoneyDTO(minCardAmount).compareTo(cardTotalAmount) < 0) {
-			coupon.setCouponStatus(CouponStatus.USED);
-			couponRepository.save(coupon);
-			CardCoupon cardCoupon = CardCoupon.createCardCoupon(card, coupon);
-			cardCouponRepository.save(cardCoupon);
-			if (card.getCouponDiscount() == null) {
-				card.setCouponDiscount(coupon.getDiscountAmount());
-			} else {
-				MoneyDTO cardCouponDiscount = Money.toMoneyDTO(card.getCouponDiscount());
-				MoneyDTO newCouponDiscount = Money.toMoneyDTO(coupon.getDiscountAmount());
-				MoneyDTO totalCouponAmount = cardCouponDiscount.addMoney(newCouponDiscount);
-				card.setCouponDiscount(Money.fromMoneyDTO(totalCouponAmount));
-			}
-			cardRepository.save(card);
+			CardCoupon cardCoupon = makeCouponTransaction(coupon, card);
+			return CardCoupon.toDTO(cardCoupon);
 		} else {
 			throw new SpendingIsNotEnoughException();
 		}
 	}
+
+	private CardCoupon makeCouponTransaction(Coupon coupon, Card card) throws IncompatibleCurrencyException {
+		Money.toMoneyDTO(coupon.getDiscountAmount()).printAmount("Kupon indirimi uygulandı:");
+		coupon.setCouponStatus(CouponStatus.USED);
+		couponRepository.save(coupon);
+		CardCoupon cardCoupon = CardCoupon.createCardCoupon(card, coupon);
+		cardCoupon = cardCouponRepository.save(cardCoupon);
+		if (card.getCouponDiscount() == null) {
+			card.setCouponDiscount(coupon.getDiscountAmount());
+		} else {
+			MoneyDTO cardCouponDiscount = Money.toMoneyDTO(card.getCouponDiscount());
+			MoneyDTO newCouponDiscount = Money.toMoneyDTO(coupon.getDiscountAmount());
+			MoneyDTO totalCouponAmount = cardCouponDiscount.addMoney(newCouponDiscount);
+			card.setCouponDiscount(Money.fromMoneyDTO(totalCouponAmount));
+		}
+		cardRepository.save(card);
+		return cardCoupon;
+	}
+
 
 	public void removeCouponFromCard(Long cardCouponId) throws ObjectNotFoundException, IncompatibleCurrencyException {
 		CardCoupon cardCoupon = cardCouponRepository.findById(cardCouponId)
 				.orElseThrow(() -> new ObjectNotFoundException());
 		if (cardCoupon != null) {
 			Coupon coupon = cardCoupon.getCoupon();
+			Money.toMoneyDTO(coupon.getDiscountAmount()).printAmount("Kupon indirimi kaldırıldı:");
 			Card card = cardCoupon.getCard();
 			cardCouponRepository.delete(cardCoupon);
 			coupon.setCouponStatus(CouponStatus.ACTIVE);

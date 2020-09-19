@@ -11,6 +11,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import com.shopping.etrade.dto.CampaignDiscountDTO;
 import com.shopping.etrade.enumtypes.DiscountType;
@@ -25,7 +26,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "campaign_discount")
 public class CampaignDiscount extends IdVersion {
-
+	@NotNull
 	private int productCount;
 	private BigDecimal discountRate;
 	@AttributeOverrides({ @AttributeOverride(name = "amount", column = @Column(name = "discount_amount")),
@@ -34,6 +35,7 @@ public class CampaignDiscount extends IdVersion {
 	@ManyToOne(fetch = FetchType.EAGER)
 	private Campaign campaign;
 	@Enumerated(EnumType.STRING)
+	@NotNull
 	private DiscountType discountType;
 
 	public static CampaignDiscountDTO toDTO(CampaignDiscount campaignDiscount) {

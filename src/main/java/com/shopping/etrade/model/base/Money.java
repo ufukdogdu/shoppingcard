@@ -3,6 +3,8 @@ package com.shopping.etrade.model.base;
 import java.math.BigDecimal;
 
 import javax.persistence.Embeddable;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
 
 import com.shopping.etrade.dto.base.MoneyDTO;
 
@@ -14,7 +16,9 @@ import lombok.Setter;
 @Embeddable
 public class Money {
 
+	@PositiveOrZero
 	private BigDecimal amount;
+	@NotNull
 	private String currency;
 
 	public Money() {

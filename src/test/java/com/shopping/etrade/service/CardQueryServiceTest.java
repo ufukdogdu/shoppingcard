@@ -1,6 +1,5 @@
 package com.shopping.etrade.service;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
@@ -10,19 +9,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.shopping.etrade.dto.CardDTO;
 import com.shopping.etrade.dto.CardProductDTO;
 import com.shopping.etrade.dto.base.MoneyDTO;
-import com.shopping.etrade.enumtypes.CouponStatus;
 import com.shopping.etrade.exception.IncompatibleCurrencyException;
 import com.shopping.etrade.exception.ObjectNotFoundException;
-import com.shopping.etrade.exception.SpendingIsNotEnoughException;
 import com.shopping.etrade.mock.CardMocker;
 import com.shopping.etrade.mock.CardProductMocker;
 import com.shopping.etrade.model.Card;
-import com.shopping.etrade.model.CardCoupon;
 import com.shopping.etrade.model.CardProduct;
-import com.shopping.etrade.model.Coupon;
-import com.shopping.etrade.model.base.Money;
 import com.shopping.etrade.model.repository.CardProductRepository;
 import com.shopping.etrade.model.repository.CardRepository;
 
@@ -35,8 +30,7 @@ public class CardQueryServiceTest {
 	public CardQueryService cardQueryService;
 
 	@Before
-	public void setup()
-	{
+	public void setup() {
 		cardRepository = Mockito.mock(CardRepository.class);
 		cardProductRepository = Mockito.mock(CardProductRepository.class);
 		cardQueryService = new CardQueryService(cardRepository, cardProductRepository);
@@ -53,6 +47,14 @@ public class CardQueryServiceTest {
 		assertThat(cardProductDTOList.size()).isEqualTo(mockCardProductList.size());
 	}
 	
+	@Test(expected = ObjectNotFoundException.class)
+	public void testGCardProductListByCardIdException() throws ObjectNotFoundException {
+		Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.ofNullable(null));
+		List<CardProduct> mockCardProductList = CardProductMocker.generateCardProductList();
+		Mockito.when(cardProductRepository.findAllByCard(Mockito.any())).thenReturn(mockCardProductList);
+		cardQueryService.getCardProductListByCardId(1L);
+	}
+
 	@Test
 	public void testGetCardTotalAmountWithoutDiscount() throws IncompatibleCurrencyException, ObjectNotFoundException {
 		Card mockCard = CardMocker.genarateCard();
@@ -69,7 +71,26 @@ public class CardQueryServiceTest {
 		Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(mockCard));
 		cardQueryService.printCardAmount(1L);
 	}
-	
 
+	@Test(expected = ObjectNotFoundException.class)
+	public void testPrintCardAmountException() throws IncompatibleCurrencyException, ObjectNotFoundException {
+		Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.ofNullable(null));
+		cardQueryService.printCardAmount(1L);
+	}
 	
+	@Test
+	public void testGetCardById() throws ObjectNotFoundException {
+		Card mockCard = CardMocker.genarateCard();
+		Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(mockCard));
+		CardDTO cardDTO = cardQueryService.getCardById(1L);
+		assertThat(cardDTO).isNotNull();
+		assertThat(cardDTO.getBasketAmount().getAmount()).isEqualTo(mockCard.getBasketAmount().getAmount());
+	}
+
+	@Test(expected = ObjectNotFoundException.class)
+	public void testGetCardByIdException() throws ObjectNotFoundException {
+		Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.ofNullable(null));
+		cardQueryService.getCardById(1L);
+	}
+
 }

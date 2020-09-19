@@ -4,6 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import com.shopping.etrade.dto.CategoryDTO;
 import com.shopping.etrade.model.base.IdVersion;
@@ -16,9 +17,10 @@ import lombok.Setter;
 @Entity
 @Table(name = "category")
 public class Category extends IdVersion {
-
+	@NotNull
 	private String title;
 	private Long parentCategoryId;
+	@NotNull
 	@ManyToOne(fetch = FetchType.EAGER)
     private Campaign campaign;
 	

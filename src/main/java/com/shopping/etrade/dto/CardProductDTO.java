@@ -28,12 +28,4 @@ public class CardProductDTO extends BaseDTO {
 	public MoneyDTO getTotalAmount() {
 		return productDTO.getPrice().multiply(quantity);
 	}
-
-	public void writeCardProductDTO() {
-		System.out.println("Ürün:" + productDTO.getTitle() + " fiyatı:" + productDTO.getPrice().getAmount().setScale(2)
-				+ productDTO.getPrice().getCurrency()
-				+ " miktarı:" + quantity + " toplam fiyatı:"
-				+ productDTO.getPrice().getAmount().setScale(2).multiply(new BigDecimal(quantity)).setScale(2)
-			    + " " +productDTO.getPrice().getCurrency());
-	}
 }

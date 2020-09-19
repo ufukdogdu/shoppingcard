@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.shopping.etrade.dto.CardDTO;
 import com.shopping.etrade.dto.CardProductDTO;
 import com.shopping.etrade.dto.base.MoneyDTO;
 import com.shopping.etrade.exception.IncompatibleCurrencyException;
@@ -17,11 +18,12 @@ import com.shopping.etrade.model.CardProduct;
 import com.shopping.etrade.model.base.Money;
 import com.shopping.etrade.model.repository.CardProductRepository;
 import com.shopping.etrade.model.repository.CardRepository;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 @Service
 @Transactional(readOnly = true)
 public class CardQueryService {
-
+	Logger logger = LoggerFactory.getLogger(CardQueryService.class);
 	public final CardRepository cardRepository;
 	public final CardProductRepository cardProductRepository;
 
@@ -31,6 +33,11 @@ public class CardQueryService {
 		this.cardProductRepository = cardProductRepository;
 	}
 
+	public CardDTO getCardById(Long cardId) throws ObjectNotFoundException {
+		Card card = cardRepository.findById(cardId).orElseThrow(() -> new ObjectNotFoundException());
+		return Card.toDTO(card);
+	}
+	
 	public List<CardProductDTO> getCardProductListByCardId(Long cardId) throws ObjectNotFoundException {
 		Card card = cardRepository.findById(cardId).orElseThrow(() -> new ObjectNotFoundException());
 		List<CardProduct> cardProductList = cardProductRepository.findAllByCard(card);
@@ -51,6 +58,7 @@ public class CardQueryService {
 	}
 	
 	public void printCardAmount(Long cardId) throws IncompatibleCurrencyException, ObjectNotFoundException {
+		logger.info("*********************************************");
 		Card card = cardRepository.findById(cardId).orElseThrow(() -> new ObjectNotFoundException());
 		MoneyDTO basketAmountDTO = Money.toMoneyDTO(card.getBasketAmount());
 		basketAmountDTO.printAmount("İndirimsiz Toplam Tutar:");
@@ -61,6 +69,8 @@ public class CardQueryService {
 		MoneyDTO shippingAmountDTO = Money.toMoneyDTO(card.getShippingAmount());
 		shippingAmountDTO.printAmount("Toplam Kargolama Ücreti:");
 		MoneyDTO totalPaymentAmountDTO = basketAmountDTO.substractMoney(couponDiscountDTO).addMoney(shippingAmountDTO).substractMoney(campaignDiscountDTO);
+		logger.info("---------------------------------------------");
 		totalPaymentAmountDTO.printAmount("Ödenecek Toplam Tutar:");
+		logger.info("*********************************************");
 	}
 }

@@ -35,12 +35,4 @@ public class CategoryMocker {
 		}
 		return mockList;
 	}
-	
-	public static List<CategoryDTO> generateCategoryDTOList(){
-		List<CategoryDTO> mockList = new ArrayList<>();
-		for(int i= 0; i<3; ++i) {
-			mockList.add(CategoryMocker.generateCategoryDTO());
-		}
-		return mockList;
-	}
 }

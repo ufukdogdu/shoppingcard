@@ -5,6 +5,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 import com.shopping.etrade.dto.CardProductDTO;
 import com.shopping.etrade.model.base.IdVersion;
@@ -17,9 +18,11 @@ import lombok.Setter;
 @Entity
 @Table(name = "card_product")
 public class CardProduct extends IdVersion {
+	@NotNull
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "product_id")
 	private Product product;
+	@NotNull
 	private int quantity;
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "card_id")

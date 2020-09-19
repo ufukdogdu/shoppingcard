@@ -3,6 +3,12 @@ package com.shopping.etrade.dto.base;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.shopping.etrade.exception.IncompatibleCurrencyException;
 import com.shopping.etrade.util.ExchangeUtil;
 
@@ -16,9 +22,11 @@ public class MoneyDTO implements Comparable<MoneyDTO> {
 	private static final String LEFT = "L";
 	private static final String RIGHT = "R";
 	private static final String EMPTY = " ";
+	@PositiveOrZero
 	private BigDecimal amount;
+	@NotNull
 	private String currency;
-
+	Logger logger = LoggerFactory.getLogger(MoneyDTO.class);
 	public MoneyDTO(BigDecimal amount, String currency) {
 		this.amount = amount;
 		this.currency = currency;
@@ -59,7 +67,7 @@ public class MoneyDTO implements Comparable<MoneyDTO> {
 
 	public void printAmount(String description) {
 		String amount = this.amount.setScale(2) + EMPTY + this.currency;
-		System.out.println(this.addEmptyLine(description, 30, RIGHT) + this.addEmptyLine(amount, 10, LEFT));
+		logger.info(this.addEmptyLine(description, 35, RIGHT) + this.addEmptyLine(amount, 10, LEFT));
 	}
 
 	private String addEmptyLine(String word, int maxLine, String direction) {

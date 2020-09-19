@@ -1,5 +1,7 @@
 package com.shopping.etrade.dto;
 
+import javax.validation.constraints.NotNull;
+
 import com.shopping.etrade.dto.base.BaseDTO;
 import com.shopping.etrade.dto.base.MoneyDTO;
 import com.shopping.etrade.enumtypes.QuantityType;
@@ -10,10 +12,15 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProductDTO extends BaseDTO {
+	@NotNull
 	private String title;
+	@NotNull
 	private MoneyDTO price;
-	private QuantityType quantity;
+	@NotNull
+	private QuantityType quantityType;
+	@NotNull
 	private CategoryDTO categoryDTO;
+	@NotNull
 	private String firmName;
 
 	public static ProductDTO createMock(Long id) {

@@ -10,7 +10,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.shopping.etrade.dto.CardDTO;
 import com.shopping.etrade.dto.CardProductDTO;
+import com.shopping.etrade.dto.base.MoneyDTO;
 import com.shopping.etrade.exception.IncompatibleCurrencyException;
 import com.shopping.etrade.exception.ObjectNotFoundException;
 import com.shopping.etrade.exception.SpendingIsNotEnoughException;
@@ -61,13 +63,23 @@ public class CardCommandServiceTest {
 	}
 
 	@Test
-	public void testRemoveProductFromCard() throws ObjectNotFoundException {
+	public void testRemoveProductFromCard() throws ObjectNotFoundException, IncompatibleCurrencyException {
 		CardProduct mockCardProduct = CardProductMocker.generateCardProduct();
 		Mockito.when(cardProductRepository.findById(1L)).thenReturn(Optional.of(mockCardProduct));
 		Mockito.doNothing().when(cardProductRepository).delete(mockCardProduct);
-		cardCommandService.removeProductFromCard(1L);
-	}
-
+		Card mockCard = CardMocker.genarateCard();
+		Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(mockCard));
+		Mockito.when(cardQueryService.getCardTotalAmountWithoutDiscount(1L)).thenReturn(MoneyMocker.generateMoneyDTO());
+		Mockito.when(campaignDiscountQueryService.calculateDiscountedAmountOfCard(1L))
+		.thenReturn(MoneyMocker.generateMoneyDTO());
+		List<CardProductDTO> mockCardProductDTOList = CardProductMocker.generateCardProductDTOList();
+		Mockito.when(cardQueryService.getCardProductListByCardId(1L)).thenReturn(mockCardProductDTOList);
+		Mockito.when(deliveryStrategyContext.executeDeliveryStrategy(Mockito.anyInt()))
+				.thenReturn(MoneyMocker.generateMoneyDTO());
+		Mockito.when(cardRepository.save(Mockito.any())).thenReturn(mockCard);
+		cardCommandService.removeProductFromCard(1L, 1);
+	}	
+	
 	@Test
 	public void testAddProductToCard() throws IncompatibleCurrencyException, ObjectNotFoundException {
 		Card mockCard = CardMocker.genarateCard();
@@ -102,7 +114,9 @@ public class CardCommandServiceTest {
 				.thenReturn(mockCoupon);
 		Card mockCard = CardMocker.genarateCard();
 		Mockito.when(cardRepository.findById(1L)).thenReturn(Optional.of(mockCard));
-		Mockito.when(cardQueryService.getCardTotalAmountWithoutDiscount(1L)).thenReturn(MoneyMocker.generateMoneyDTO());
+		MoneyDTO mockUSD = MoneyMocker.generateMoneyDTO();
+		mockUSD.setCurrency("USD");
+		Mockito.when(cardQueryService.getCardTotalAmountWithoutDiscount(1L)).thenReturn(mockUSD);
 		Mockito.when(couponRepository.save(Mockito.any())).thenReturn(mockCard);
 		Mockito.when(cardCouponRepository.save(Mockito.any())).thenReturn(CardCouponMocker.generateCardCoupon());
 		Mockito.when(cardRepository.save(Mockito.any())).thenReturn(mockCard);
