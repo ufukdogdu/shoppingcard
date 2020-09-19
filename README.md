@@ -35,6 +35,7 @@ CARD_COUPON: Sepette indirimi kullandırılmış kuponların tutulduğu tablodur
 
 
 UYGULAMA KURULUMU
+
 Uygulama java-8 üzerinde çalışmaktadır. Lokal ortamda kullanmak için makinenizde Java-8, mySQL ve Lombok kurulumlarının yapılmış olması gerekmektedir.
 
 Free-licence olduğu için mySQL veritabanı kullanılmıştır. Entity düzeyinde mapleme ve jpa kullanıldığı için uygulama veritabanı bağımsız çalışmaktadır.
@@ -75,11 +76,9 @@ Projenin dışarı açıldığı, CardApiController’dan DTO objeleri olarak se
 Loglama için log4J Logger sınıfı kullanılmıştır.
 
 UNIT TEST
-
 Unit testler junit ile yazılmıştır. Coverage oranları aşağıdaki gibidir:
 
   ![alt text](src/main/images/UnitTests.jpg)
-
 ÖRNEK UYGULAMA KULLANIMI
 
 Uygulama server’I ayağa kalktığında resources altında bulunan insert_sql otomatik olarak çalışarak, gerekli verileri tablolara doldurmaktadır.
