@@ -81,9 +81,6 @@ Unit testler junit ile yazılmıştır. Coverage oranları aşağıdaki gibidir:
   ![alt text](src/main/images/UnitTests.jpg)
 
 
-
-
-
 ÖRNEK UYGULAMA KULLANIMI
 
 Uygulama server’I ayağa kalktığında resources altında bulunan insert_sql otomatik olarak çalışarak, gerekli verileri tablolara doldurmaktadır.
