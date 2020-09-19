@@ -78,7 +78,7 @@ UNIT TEST
 
 Unit testler junit ile yazılmıştır. Coverage oranları aşağıdaki gibidir:
 
- 
+  ![alt text](src/main/images/UnitTests.jpg)
 
 
 
@@ -90,12 +90,13 @@ Uygulama server’I ayağa kalktığında resources altında bulunan insert_sql 
 
 Uygulama swagger-ui ile, localhost:8080/swagger-ui.html sayfasından aşağıdaki şekilde açılabilir.
 
- 
+  ![alt text](src/main/images/Api.jpg)
 
 Burada API’deki ilgili servisleri çağırabilirsiniz.
 
 /shopping/test servisi ile Console’dan ya da log dosyalarından aşağıdaki şekilde işlem sonuçlarını görebilirsiniz. 
 
+ ![alt text](src/main/images/Result.jpg)
  
 
 
