@@ -75,10 +75,6 @@ Projenin dışarı açıldığı, CardApiController’dan DTO objeleri olarak se
 
 Loglama için log4J Logger sınıfı kullanılmıştır.
 
-UNIT TEST
-Unit testler junit ile yazılmıştır. Coverage oranları aşağıdaki gibidir:
-
-  ![alt text](src/main/images/UnitTests.jpg)
 ÖRNEK UYGULAMA KULLANIMI
 
 Uygulama server’I ayağa kalktığında resources altında bulunan insert_sql otomatik olarak çalışarak, gerekli verileri tablolara doldurmaktadır.
@@ -92,6 +88,11 @@ Burada API’deki ilgili servisleri çağırabilirsiniz.
 /shopping/test servisi ile Console’dan ya da log dosyalarından aşağıdaki şekilde işlem sonuçlarını görebilirsiniz. 
 
  ![alt text](src/main/images/Result.jpg)
+ 
+ UNIT TEST
+Unit testler junit ile yazılmıştır. Coverage oranları aşağıdaki gibidir:
+
+  ![alt text](src/main/images/UnitTests.jpg)
  
 
 
